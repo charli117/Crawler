@@ -2,7 +2,7 @@
 
 import { program } from "commander";
 import { Config } from "./config.js";
-import { crawl, write } from "./core.js";
+import {crawl, writeDatabase, writeJson} from "./core.js";
 import { createRequire } from "node:module";
 import inquirer from "inquirer";
 
@@ -15,6 +15,12 @@ const messages = {
   selector: "What is the CSS selector you want to match?",
   maxPagesToCrawl: "How many pages do you want to crawl?",
   outputFileName: "What is the name of the output file?",
+  outputType: "What is the storage mode of the output file?",
+  outputDatabaseHost: "What is the database host of the output file?",
+  outputDatabasePort: "What is the database host port of the output file?",
+  outputDatabaseUser: "What is the database user name of the output file?",
+  outputDatabasePSW: "What is the database user password of the output file?",
+  outputDatabase: "What is the database name of the output file?",
 };
 
 async function handler(options: Config) {
@@ -25,6 +31,12 @@ async function handler(options: Config) {
       selector,
       maxPagesToCrawl: maxPagesToCrawlStr,
       outputFileName,
+      outputType,
+      outputDatabaseHost,
+      outputDatabasePort,
+      outputDatabaseUser,
+      outputDatabasePSW,
+      outputDatabase,
     } = options;
 
     // @ts-ignore
@@ -36,6 +48,12 @@ async function handler(options: Config) {
       selector,
       maxPagesToCrawl,
       outputFileName,
+      outputType,
+      outputDatabaseHost,
+      outputDatabasePort,
+      outputDatabaseUser,
+      outputDatabasePSW,
+      outputDatabase,
     };
 
     if (!config.url || !config.match || !config.selector) {
@@ -74,7 +92,12 @@ async function handler(options: Config) {
     }
 
     await crawl(config);
-    await write(config);
+    if (config.outputType === 'json'){
+      await writeJson(config);
+    } else {
+      await writeDatabase(config);
+    }
+
   } catch (error) {
     console.log(error);
   }

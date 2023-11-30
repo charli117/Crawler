@@ -31,10 +31,24 @@ export const configSchema = z.object({
    */
   maxPagesToCrawl: z.number().int().positive(),
   /**
+   * Storage mode the finished data，json or database
+   * @default "json"
+   */
+  outputType: z.string(),
+  /**
    * File name for the finished data
    * @default "output.json"
    */
   outputFileName: z.string(),
+  /**
+   * If storage mode is database,Database connection information
+   * @default "json"
+   */
+  outputDatabaseHost: z.string(),
+  outputDatabasePort: z.number().int().positive(),
+  outputDatabaseUser: z.string(),
+  outputDatabasePSW: z.string(),
+  outputDatabase: z.string(),
   /** Optional cookie to be set. E.g. for Cookie Consent */
   cookie: z
     .object({

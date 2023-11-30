@@ -5,6 +5,7 @@ import { glob } from "glob";
 import { Config, configSchema } from "./config.js";
 import { Page } from "playwright";
 import { isWithinTokenLimit } from "gpt-tokenizer";
+import mysql from 'mysql2/promise';
 import TurndownService from 'turndown';
 
 let pageCounter = 0;
@@ -169,7 +170,7 @@ export async function crawl(config: Config) {
   }
 }
 
-export async function write(config: Config) {
+export async function writeJson(config: Config) {
   const jsonFiles = await glob("storage/datasets/default/*.json", {
     absolute: true,
   });
@@ -239,5 +240,51 @@ export async function write(config: Config) {
   // Check if any remaining data needs to be written to a file.
   if (currentResults.length > 0) {
     await writeBatchToFile();
+  }
+}
+
+export async function writeDatabase(config: Config) {
+  const jsonFiles = await glob("storage/datasets/default/*.json", {
+    absolute: true,
+  });
+
+  console.log(`Found ${jsonFiles.length} files to process...`);
+
+  const pool  = mysql.createPool({
+    connectionLimit: 10,
+    port: config.outputDatabasePort,
+    host: config.outputDatabaseHost,
+    user: config.outputDatabaseUser,
+    password: config.outputDatabasePSW,
+    database: config.outputDatabase
+  });
+  let currentResults: Record<string, any>[] = [];
+  const maxItemsPerBatch: number = config.maxFileSize || Infinity;
+  let batchCounter: number = 1;
+
+  const insertBatchToDB = async (): Promise<void> => {
+    const insertQuery = 'REPLACE INTO crawl (title, url, html, markdown) VALUES ?';
+    const values = currentResults.map(item => [item.title, item.url, item.html, item.markdown]); // map your item keys to your column names
+    await pool.query(insertQuery, [values]);
+    console.log(`Inserted ${currentResults.length} items to the database in batch ${batchCounter}`);
+    currentResults = [];
+    batchCounter++;
+  };
+
+  // Iterate over each JSON file and process its contents.
+  for (const file of jsonFiles) {
+    const fileContent = await readFile(file, "utf-8");
+    const data: Record<string, any> = JSON.parse(fileContent);
+
+    currentResults.push(data);
+
+    if (currentResults.length >= maxItemsPerBatch) {
+      await insertBatchToDB();
+    }
+  }
+
+  // Check if any remaining data needs to be inserted to the database.
+  if (currentResults.length > 0) {
+    await insertBatchToDB();
   }
 }
