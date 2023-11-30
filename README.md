@@ -56,13 +56,14 @@ E.g. to crawl the Builder.io docs to make our custom GPT you can use:
 
 ```ts
 export const defaultConfig: Config = {
-  url: "https://www.builder.io/c/docs/developers",
-  match: "https://www.builder.io/c/docs/**",
-  selector: `.docs-builder-container`,
-  maxPagesToCrawl: 50,
-  outputFileName: "output.json",
+    url: "https://hc.jiandaoyun.com/doc/",
+    match: "https://hc.jiandaoyun.com/doc/**",
+    selector: ".x-page-content",
+    maxPagesToCrawl: 10,
+    outputFileName: "../data/output.json"
 };
 ```
+
 
 See [config.ts](src/config.ts) for all available options. Here is a sample of the common configu options:
 

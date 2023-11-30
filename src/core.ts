@@ -5,6 +5,7 @@ import { glob } from "glob";
 import { Config, configSchema } from "./config.js";
 import { Page } from "playwright";
 import { isWithinTokenLimit } from "gpt-tokenizer";
+import TurndownService from 'turndown';
 
 let pageCounter = 0;
 
@@ -27,6 +28,31 @@ export function getPageHtml(page: Page, selector = "body") {
       return el?.innerText || "";
     }
   }, selector);
+}
+
+export function getPageMarkdown(page: Page, selector = "body") {
+  return page.evaluate((selector) => {
+    // Check if the selector is an XPath
+    if (selector.startsWith("/")) {
+      const elements = document.evaluate(
+        selector,
+        document,
+        null,
+        XPathResult.ANY_TYPE,
+        null,
+      );
+      let result = elements.iterateNext();
+      return result ? result.textContent || "" : "";
+    } else {
+      // Handle as a CSS selector
+      const el = document.querySelector(selector) as HTMLElement | null;
+      return el?.innerHTML || "";
+    }
+  }, selector)
+  .then(markdown => {
+      const turndownService = new TurndownService();
+      return turndownService.turndown(markdown);
+  });
 }
 
 export async function waitForXPath(page: Page, xpath: string, timeout: number) {
@@ -87,9 +113,10 @@ export async function crawl(config: Config) {
         }
 
         const html = await getPageHtml(page, config.selector);
+        const markdown = await getPageMarkdown(page, config.selector);
 
         // Save results as JSON to ./storage/datasets/default
-        await pushData({ title, url: request.loadedUrl, html });
+        await pushData({ title, url: request.loadedUrl, html, markdown });
 
         if (config.onVisitPage) {
           await config.onVisitPage({ page, pushData });

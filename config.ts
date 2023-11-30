@@ -1,8 +1,10 @@
+// @ts-ignore
 import { Config } from "./src/config";
 
 export const defaultConfig: Config = {
-  url: "https://www.builder.io/c/docs/developers",
-  match: "https://www.builder.io/c/docs/**",
-  maxPagesToCrawl: 50,
-  outputFileName: "output.json",
+    url: "https://hc.jiandaoyun.com/doc/",
+    match: "https://hc.jiandaoyun.com/doc/**",
+    selector: ".x-page-content",
+    maxPagesToCrawl: 10,
+    outputFileName: "/Users/luowei/Documents/Pycharm/Crawler/output.json"
 };
