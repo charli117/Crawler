@@ -5,6 +5,7 @@ import { Config } from "./config.js";
 import {crawl, writeDatabase, writeJson} from "./core.js";
 import { createRequire } from "node:module";
 import inquirer from "inquirer";
+import {defaultConfig} from "../config";
 
 const require = createRequire(import.meta.url);
 const { version, description } = require("../../package.json");
@@ -12,7 +13,7 @@ const { version, description } = require("../../package.json");
 const messages = {
   url: "What is the first URL of the website you want to crawl?",
   match: "What is the URL pattern you want to match?",
-  selector: "What is the CSS selector you want to match?",
+  inclusions: "What is the CSS inclusions you want to match?",
   maxPagesToCrawl: "How many pages do you want to crawl?",
   outputFileName: "What is the name of the output file?",
   outputType: "What is the storage mode of the output file?",
@@ -28,7 +29,7 @@ async function handler(options: Config) {
     const {
       url,
       match,
-      selector,
+      inclusions,
       maxPagesToCrawl: maxPagesToCrawlStr,
       outputFileName,
       outputType,
@@ -45,7 +46,7 @@ async function handler(options: Config) {
     let config: Config = {
       url,
       match,
-      selector,
+      inclusions,
       maxPagesToCrawl,
       outputFileName,
       outputType,
@@ -56,7 +57,7 @@ async function handler(options: Config) {
       outputDatabase,
     };
 
-    if (!config.url || !config.match || !config.selector) {
+    if (!config.url || !config.match || !config.inclusions) {
       const questions = [];
 
       if (!config.url) {
@@ -75,11 +76,11 @@ async function handler(options: Config) {
         });
       }
 
-      if (!config.selector) {
+      if (!config.inclusions) {
         questions.push({
           type: "input",
           name: "selector",
-          message: messages.selector,
+          message: messages.inclusions,
         });
       }
 
@@ -92,6 +93,7 @@ async function handler(options: Config) {
     }
 
     await crawl(config);
+
     if (config.outputType === 'json'){
       await writeJson(config);
     } else {
@@ -108,7 +110,7 @@ program.version(version).description(description);
 program
   .option("-u, --url <string>", messages.url, "")
   .option("-m, --match <string>", messages.match, "")
-  .option("-s, --selector <string>", messages.selector, "")
+  .option("-s, --selector <datalist>", messages.inclusions, "")
   .option("-m, --maxPagesToCrawl <number>", messages.maxPagesToCrawl, "50")
   .option(
     "-o, --outputFileName <string>",

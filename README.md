@@ -39,7 +39,7 @@ This project crawled the docs and generated the file that I uploaded as the basi
 Be sure you have Node.js >= 16 installed.
 
 ```sh
-git clone https://github.com/builderio/gpt-crawler
+git clone https://gitlab.gz.cvte.cn/it.Infrastructure/crawler.git
 ```
 
 #### Install dependencies
@@ -58,9 +58,16 @@ E.g. to crawl the Builder.io docs to make our custom GPT you can use:
 export const defaultConfig: Config = {
     url: "https://hc.jiandaoyun.com/doc/",
     match: "https://hc.jiandaoyun.com/doc/**",
-    selector: ".x-page-content",
+    inclusions: [".page-title",".markdown-body"],
     maxPagesToCrawl: 10,
-    outputFileName: "../data/output.json"
+    waitForSelectorTimeout: 2000,
+    outputType: "database",
+    outputFileName: "./output.json",
+    outputDatabaseHost: "***",
+    outputDatabasePort: 1433,
+    outputDatabaseUser: "***",
+    outputDatabasePSW: "***",
+    outputDatabase: "***"
 };
 ```
 
@@ -73,10 +80,15 @@ type Config = {
   url: string;
   /** Pattern to match against for links on a page to subsequently crawl */
   match: string;
-  /** Selector to grab the inner text from */
-  selector: string;
+  /** Selectors to grab the inner text from */
+  inclusions: string[];
   /** Don't crawl more than this many pages */
   maxPagesToCrawl: number;
+  /** Storage type for the finished data
+   * @example
+   * database、json
+   * */
+  outputType: string;
   /** File name for the finished data */
   outputFileName: string;
   /** Optional resources to exclude
@@ -89,6 +101,16 @@ type Config = {
   maxFileSize?: number;
   /** Optional maximum number tokens to include in the output file */
   maxTokens?: number;
+  /** If the storage type is database use database server host for the finished data */
+  outputDatabaseHost?: string;
+  /** If the storage type is database use database server port for the finished data */
+  outputDatabasePort?: number;
+  /** If the storage type is database use database server username for the finished data */
+  outputDatabaseUser?: string;
+  /** If the storage type is database use database server user password for the finished data */
+  outputDatabasePSW?: string;
+  /** If the storage type is database use database name for the finished data */
+  outputDatabase?: string;
 };
 ```
 

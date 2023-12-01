@@ -10,46 +10,65 @@ import TurndownService from 'turndown';
 
 let pageCounter = 0;
 
-export function getPageHtml(page: Page, selector = "body") {
-  return page.evaluate((selector) => {
-    // Check if the selector is an XPath
-    if (selector.startsWith("/")) {
-      const elements = document.evaluate(
-        selector,
-        document,
-        null,
-        XPathResult.ANY_TYPE,
-        null,
-      );
-      let result = elements.iterateNext();
-      return result ? result.textContent || "" : "";
-    } else {
-      // Handle as a CSS selector
-      const el = document.querySelector(selector) as HTMLElement | null;
-      return el?.innerText || "";
+export function getPageHtml(page: Page, inclusions: string[] = ["body"]) {
+  return page.evaluate(inclusions => {
+    let result = "";
+    for (const selector of inclusions) {
+      // Check if the selector is an XPath
+      if (selector.startsWith("/")) {
+        const elements = document.evaluate(
+          selector,
+          document,
+          null,
+          XPathResult.ANY_TYPE,
+          null,
+        );
+        let el = elements.iterateNext();
+        while(el){
+          result += el.textContent || "";
+          el = elements.iterateNext();
+        }
+      } else {
+        // Handle as a CSS selector
+        const el = document.querySelector(selector) as HTMLElement | null;
+        result += el?.innerText || "";
+      }
     }
-  }, selector);
+    return result;
+  }, inclusions);
 }
 
-export function getPageMarkdown(page: Page, selector = "body") {
-  return page.evaluate((selector) => {
-    // Check if the selector is an XPath
-    if (selector.startsWith("/")) {
-      const elements = document.evaluate(
-        selector,
-        document,
-        null,
-        XPathResult.ANY_TYPE,
-        null,
-      );
-      let result = elements.iterateNext();
-      return result ? result.textContent || "" : "";
-    } else {
-      // Handle as a CSS selector
-      const el = document.querySelector(selector) as HTMLElement | null;
-      return el?.innerHTML || "";
+export function getPageMarkdown(page: Page, inclusions: string[] = ["body"]) {
+  return page.evaluate(inclusions => {
+    let result = "";
+    for (const selector of inclusions) {
+      // Check if the selector is an XPath
+      if (selector.startsWith("/")) {
+        const elements = document.evaluate(
+          selector,
+          document,
+          null,
+          XPathResult.ANY_TYPE,
+          null,
+        );
+        let el = elements.iterateNext();
+        while(el){
+          result += el.textContent || "";
+          el = elements.iterateNext();
+        }
+      } else {
+        // Handle as a CSS selector
+        const els = document.querySelectorAll(selector) as NodeListOf<HTMLElement>;
+        for(const el of Array.from(els)){
+            let valid = true;
+            if(valid){
+                result += el.innerHTML || "";
+            }
+        }
+      }
     }
-  }, selector)
+    return result;
+  }, inclusions)
   .then(markdown => {
       const turndownService = new TurndownService();
       return turndownService.turndown(markdown);
@@ -99,22 +118,25 @@ export async function crawl(config: Config) {
         );
 
         // Use custom handling for XPath selector
-        if (config.selector) {
-          if (config.selector.startsWith("/")) {
-            await waitForXPath(
-              page,
-              config.selector,
-              config.waitForSelectorTimeout ?? 1000,
-            );
-          } else {
-            await page.waitForSelector(config.selector, {
-              timeout: config.waitForSelectorTimeout ?? 1000,
-            });
+        for (const selector of config.inclusions || ["body"]) {
+          // Check if the selector is an XPath
+          if (selector) {
+            if (selector.startsWith("/")) {
+              await waitForXPath(
+                  page,
+                  selector,
+                  config.waitForSelectorTimeout ?? 1000,
+              );
+            } else {
+              await page.waitForSelector(selector, {
+                timeout: config.waitForSelectorTimeout ?? 1000,
+              });
+            }
           }
         }
 
-        const html = await getPageHtml(page, config.selector);
-        const markdown = await getPageMarkdown(page, config.selector);
+        const html = await getPageHtml(page, config.inclusions);
+        const markdown = await getPageMarkdown(page, config.inclusions);
 
         // Save results as JSON to ./storage/datasets/default
         await pushData({ title, url: request.loadedUrl, html, markdown });
@@ -137,7 +159,7 @@ export async function crawl(config: Config) {
       preNavigationHooks: [
         // Abort requests for certain resource types
         async ({ page, log }) => {
-          // If there are no resource exclusions, return
+          // If there are no resource return
           const RESOURCE_EXCLUSTIONS = config.resourceExclusions ?? [];
           if (RESOURCE_EXCLUSTIONS.length === 0) {
             return;
@@ -259,14 +281,14 @@ export async function writeDatabase(config: Config) {
     database: config.outputDatabase
   });
   let currentResults: Record<string, any>[] = [];
-  const maxItemsPerBatch: number = config.maxFileSize || Infinity;
+  const maxItemsPerBatch: number = 100;
   let batchCounter: number = 1;
 
   const insertBatchToDB = async (): Promise<void> => {
     const insertQuery = 'REPLACE INTO crawl (title, url, html, markdown) VALUES ?';
     const values = currentResults.map(item => [item.title, item.url, item.html, item.markdown]); // map your item keys to your column names
     await pool.query(insertQuery, [values]);
-    console.log(`Inserted ${currentResults.length} items to the database in batch ${batchCounter}`);
+    console.log(`Replaced ${currentResults.length} items to the database in batch ${batchCounter}`);
     currentResults = [];
     batchCounter++;
   };
@@ -287,4 +309,7 @@ export async function writeDatabase(config: Config) {
   if (currentResults.length > 0) {
     await insertBatchToDB();
   }
+
+  // Close the pool after all tasks are complete.
+  await pool.end();
 }

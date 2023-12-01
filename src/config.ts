@@ -24,7 +24,7 @@ export const configSchema = z.object({
    * @example ".docs-builder-container"
    * @default ""
    */
-  selector: z.string().optional(),
+  inclusions: z.array(z.string()).optional(),
   /**
    * Don't crawl more than this many pages
    * @default 50
