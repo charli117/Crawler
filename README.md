@@ -39,7 +39,7 @@ This project crawled the docs and generated the file that I uploaded as the basi
 Be sure you have Node.js >= 16 installed.
 
 ```sh
-git clone https://gitlab.gz.cvte.cn/it.Infrastructure/crawler.git
+git clone https://github.com/charli117/Crawler.git
 ```
 
 #### Install dependencies
