@@ -9,7 +9,6 @@
   "dependencies": {
     "commander": "^11.1.0",
     "crawlee": "^3.0.0",
-    "cross-env": "^7.0.3",
     "glob": "^10.3.10",
     "gpt-tokenizer": "^2.1.2",
     "inquirer": "^9.2.12",
@@ -25,6 +24,7 @@
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.0.0",
     "@types/turndown": "^5.0.4",
+    "cross-env": "^7.0.3",
     "prettier": "^3.1.0",
     "semantic-release": "^22.0.8",
     "ts-node": "^10.8.0",

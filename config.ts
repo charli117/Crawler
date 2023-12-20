@@ -9,10 +9,10 @@ export const defaultConfig: Config = {
     maxPagesToCrawl: 90000,
     waitForSelectorTimeout: 2000,
     outputType: "database",
-    outputFileName: "/Users/luowei/Documents/Pycharm/Crawler/output.json",
-    outputDatabaseHost: "p-dbsec-mysql.gz.cvte.cn",
+    outputFileName: "./output.json",
+    outputDatabaseHost: "",
     outputDatabasePort: 10006,
-    outputDatabaseUser: "admin_publicdata",
-    outputDatabasePSW: "YWRtaW5fcHVibGlj_ZGF0YQo",
-    outputDatabase: "publicdata"
+    outputDatabaseUser: "",
+    outputDatabasePSW: "",
+    outputDatabase: ""
 };
