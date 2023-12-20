@@ -8,7 +8,7 @@ export const defaultConfig: Config = {
     inclusions: [".page-title",".markdown-body"],
     maxPagesToCrawl: 90000,
     waitForSelectorTimeout: 2000,
-    outputType: "database",
+    outputType: "json",
     outputFileName: "./output.json",
     outputDatabaseHost: "",
     outputDatabasePort: 10006,
